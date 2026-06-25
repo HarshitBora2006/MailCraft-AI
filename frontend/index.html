@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SmartDraft AI ✉️</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:        #0a0a12;
+  --bg2:       #0f0f1a;
+  --bg3:       #13131f;
+  --surface:   #16162a;
+  --surface2:  #1c1c30;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.12);
+  --accent:    #6c63ff;
+  --accent2:   #8b84ff;
+  --accent3:   #4f46e5;
+  --green:     #10b981;
+  --amber:     #f59e0b;
+  --red:       #ef4444;
+  --cyan:      #06b6d4;
+  --pink:      #ec4899;
+  --text:      #f0f0f5;
+  --text2:     #a0a0b8;
+  --text3:     #5a5a78;
+  --radius:    14px;
+  --shadow:    0 8px 32px rgba(0,0,0,0.5);
+}
+html{font-size:15px;}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--bg2);}
+::-webkit-scrollbar-thumb{background:var(--accent3);border-radius:99px;}
+::selection{background:var(--accent);color:#fff;}
+
+/* ═══════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════ */
+.page{max-width:1280px;margin:0 auto;padding:0 20px 60px;}
+
+/* ═══════════════════════════════════════════════
+   HEADER / NAV
+═══════════════════════════════════════════════ */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 24px;
+  background:rgba(10,10,18,0.8);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+}
+.nav-logo{
+  display:flex;align-items:center;gap:10px;
+  font-size:1.25rem;font-weight:800;letter-spacing:-0.5px;
+  color:var(--text);
+}
+.nav-logo span{
+  background:linear-gradient(135deg,var(--accent),#a78bfa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.nav-badge{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  padding:3px 10px;border-radius:99px;
+  background:linear-gradient(135deg,rgba(108,99,255,.2),rgba(167,139,250,.2));
+  border:1px solid rgba(108,99,255,.3);
+  color:var(--accent2);
+}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.status-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);
+  animation:pulse2 2s infinite;
+}
+@keyframes pulse2{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ═══════════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════════ */
+.hero{
+  text-align:center;
+  padding:52px 20px 40px;
+  position:relative;
+  overflow:hidden;
+}
+.hero::before{
+  content:'';
+  position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:600px;height:300px;
+  background:radial-gradient(ellipse,rgba(108,99,255,.18) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  padding:5px 16px;border-radius:99px;
+  background:linear-gradient(135deg,rgba(108,99,255,.15),rgba(236,72,153,.1));
+  border:1px solid rgba(108,99,255,.25);
+  color:var(--accent2);margin-bottom:20px;
+}
+.hero-tag::before{content:'✦';color:var(--pink);}
+.hero-title{
+  font-size:clamp(2rem,5vw,3.5rem);
+  font-weight:900;letter-spacing:-2px;line-height:1.1;
+  margin-bottom:14px;
+}
+.hero-title span{
+  background:linear-gradient(135deg,#6c63ff,#a78bfa,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-sub{font-size:1rem;color:var(--text2);max-width:560px;margin:0 auto 28px;line-height:1.7;}
+.hero-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;}
+.pill{
+  font-size:11px;font-weight:600;padding:4px 12px;border-radius:99px;
+  border:1px solid var(--border2);color:var(--text2);
+  background:var(--surface);letter-spacing:.3px;
+}
+.pill i{margin-right:4px;}
+
+/* ═══════════════════════════════════════════════
+   MAIN GRID
+═══════════════════════════════════════════════ */
+.main-grid{
+  display:grid;
+  grid-template-columns:480px 1fr;
+  gap:20px;
+  align-items:start;
+}
+@media(max-width:900px){.main-grid{grid-template-columns:1fr;}}
+
+/* ═══════════════════════════════════════════════
+   CARD
+═══════════════════════════════════════════════ */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:20px;
+  overflow:hidden;
+}
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+}
+.card-title{font-size:.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text2);}
+.card-body{padding:20px;}
+
+/* ═══════════════════════════════════════════════
+   DOC TYPE TOGGLE
+═══════════════════════════════════════════════ */
+.doc-toggle{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;margin-bottom:20px;
+  background:var(--bg2);padding:4px;border-radius:12px;
+  border:1px solid var(--border);
+}
+.doc-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:10px;border-radius:9px;
+  border:none;cursor:pointer;font-size:.85rem;font-weight:600;
+  font-family:inherit;transition:all .2s;
+  background:transparent;color:var(--text3);
+}
+.doc-btn.active{
+  background:var(--accent);color:#fff;
+  box-shadow:0 4px 16px rgba(108,99,255,.4);
+}
+.doc-btn:not(.active):hover{background:var(--surface2);color:var(--text);}
+
+/* ═══════════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════════ */
+.form-group{margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-label{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:.72rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--text3);margin-bottom:6px;
+}
+.form-label .hint{font-size:.65rem;font-weight:500;letter-spacing:0;text-transform:none;color:var(--text3);}
+.form-input,.form-select,.form-textarea{
+  width:100%;padding:10px 14px;
+  background:var(--bg2);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  color:var(--text);font-size:.875rem;font-family:inherit;
+  outline:none;transition:border-color .2s,box-shadow .2s;
+  -webkit-appearance:none;
+}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--text3);}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(108,99,255,.15);
+}
+.form-select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%235a5a78' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;background-size:18px;
+  padding-right:36px;cursor:pointer;
+  background-color:var(--bg2);
+}
+.form-select option{background:var(--surface);}
+.form-textarea{resize:vertical;min-height:80px;line-height:1.6;}
+
+/* Subject row with auto-gen button */
+.subject-row{display:flex;gap:8px;align-items:flex-start;}
+.subject-row .form-input{flex:1;}
+.auto-subject-btn{
+  flex-shrink:0;
+  padding:10px 14px;
+  background:linear-gradient(135deg,rgba(108,99,255,.2),rgba(167,139,250,.1));
+  border:1px solid rgba(108,99,255,.3);
+  border-radius:10px;color:var(--accent2);
+  cursor:pointer;font-size:.75rem;font-weight:700;
+  font-family:inherit;white-space:nowrap;transition:all .2s;
+  letter-spacing:.3px;
+}
+.auto-subject-btn:hover{background:rgba(108,99,255,.3);color:#fff;}
+.auto-subject-btn.loading{opacity:.6;pointer-events:none;}
+
+/* Subject suggestions dropdown */
+.subject-suggestions{
+  display:none;
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  margin-top:6px;overflow:hidden;
+}
+.subject-suggestions.show{display:block;animation:slideDown .2s ease;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.suggestion-item{
+  padding:9px 14px;font-size:.8rem;color:var(--text2);
+  cursor:pointer;border-bottom:1px solid var(--border);transition:all .15s;
+  display:flex;align-items:center;gap:8px;
+}
+.suggestion-item::before{content:'↗';font-size:.7rem;color:var(--accent);}
+.suggestion-item:last-child{border-bottom:none;}
+.suggestion-item:hover{background:rgba(108,99,255,.1);color:var(--text);}
+
+/* ═══════════════════════════════════════════════
+   TONE GRID
+═══════════════════════════════════════════════ */
+.tone-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+}
+.tone-btn{
+  padding:8px 4px;border-radius:9px;
+  border:1px solid var(--border);
+  background:var(--bg2);
+  color:var(--text3);
+  cursor:pointer;font-size:.72rem;font-weight:600;
+  font-family:inherit;transition:all .2s;
+  text-align:center;line-height:1.3;
+}
+.tone-btn .tone-icon{display:block;font-size:1.1rem;margin-bottom:3px;}
+.tone-btn.active{
+  border-color:var(--accent);
+  background:rgba(108,99,255,.15);
+  color:var(--accent2);
+}
+.tone-btn:not(.active):hover{border-color:var(--border2);color:var(--text);background:var(--surface2);}
+
+/* ═══════════════════════════════════════════════
+   LANGUAGE TOGGLE
+═══════════════════════════════════════════════ */
+.lang-toggle{display:flex;gap:6px;}
+.lang-btn{
+  flex:1;padding:9px;border-radius:9px;
+  border:1px solid var(--border);background:var(--bg2);
+  color:var(--text3);cursor:pointer;font-size:.78rem;font-weight:600;
+  font-family:inherit;transition:all .2s;text-align:center;
+}
+.lang-btn.active{
+  border-color:var(--cyan);background:rgba(6,182,212,.12);color:var(--cyan);
+}
+
+/* ═══════════════════════════════════════════════
+   LETTER FIELDS (conditional)
+═══════════════════════════════════════════════ */
+.letter-fields{
+  display:none;
+  padding:14px;border-radius:10px;
+  background:rgba(108,99,255,.05);
+  border:1px dashed rgba(108,99,255,.2);
+  margin-bottom:14px;
+}
+.letter-fields.show{display:block;animation:slideDown .25s ease;}
+.letter-fields-title{
+  font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--accent2);margin-bottom:10px;display:flex;align-items:center;gap:6px;
+}
+
+/* ═══════════════════════════════════════════════
+   GENERATE BUTTON
+═══════════════════════════════════════════════ */
+.generate-btn{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--accent),#a78bfa);
+  border:none;border-radius:12px;
+  color:#fff;font-size:.95rem;font-weight:700;
+  font-family:inherit;cursor:pointer;letter-spacing:.3px;
+  transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 6px 24px rgba(108,99,255,.35);
+  margin-top:16px;
+}
+.generate-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 30px rgba(108,99,255,.5);}
+.generate-btn:active{transform:translateY(0);}
+.generate-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+/* ═══════════════════════════════════════════════
+   OUTPUT PANEL
+═══════════════════════════════════════════════ */
+.output-card{
+  position:sticky;top:80px;
+  display:flex;flex-direction:column;
+  min-height:600px;
+}
+.tab-bar{
+  display:flex;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+}
+.tab-btn{
+  flex:1;padding:12px 8px;
+  border:none;background:none;
+  color:var(--text3);font-family:inherit;font-size:.78rem;font-weight:600;
+  cursor:pointer;transition:all .2s;
+  border-bottom:2px solid transparent;
+  letter-spacing:.3px;
+}
+.tab-btn.active{color:var(--accent2);border-bottom-color:var(--accent);}
+.tab-btn:hover:not(.active){color:var(--text);background:rgba(255,255,255,.03);}
+.tab-btn:disabled{opacity:.35;cursor:not-allowed;}
+
+.tab-panel{display:none;flex:1;flex-direction:column;}
+.tab-panel.active{display:flex;}
+
+/* Output area */
+.output-meta{
+  display:flex;flex-wrap:wrap;gap:6px;
+  padding:12px 16px;
+  background:rgba(108,99,255,.06);
+  border-bottom:1px solid var(--border);
+}
+.meta-chip{
+  font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:99px;
+  background:var(--surface2);border:1px solid var(--border2);color:var(--text2);
+  display:flex;align-items:center;gap:4px;
+}
+.meta-chip.type{background:rgba(108,99,255,.15);border-color:rgba(108,99,255,.3);color:var(--accent2);}
+.meta-chip.lang{background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.25);color:var(--cyan);}
+.meta-chip.wc{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.25);color:var(--green);}
+
+.output-body{
+  flex:1;padding:20px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.82rem;line-height:1.9;
+  white-space:pre-wrap;color:var(--text);
+  overflow-y:auto;min-height:360px;
+}
+.output-placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;min-height:360px;color:var(--text3);text-align:center;gap:12px;
+  padding:40px;
+}
+.output-placeholder .ph-icon{font-size:3rem;opacity:.25;}
+.output-placeholder p{font-size:.85rem;max-width:300px;line-height:1.6;}
+
+.action-bar{
+  display:flex;flex-wrap:wrap;gap:8px;
+  padding:12px 16px;
+  border-top:1px solid var(--border);
+  background:var(--bg2);
+}
+.action-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:7px 14px;border-radius:8px;
+  border:1px solid var(--border2);
+  background:var(--surface2);
+  color:var(--text2);font-family:inherit;font-size:.75rem;font-weight:600;
+  cursor:pointer;transition:all .15s;letter-spacing:.3px;
+}
+.action-btn:hover{color:var(--text);border-color:rgba(255,255,255,.2);background:var(--surface);}
+.action-btn.green{border-color:rgba(16,185,129,.3);color:var(--green);}
+.action-btn.green:hover{background:rgba(16,185,129,.1);}
+.action-btn.amber{border-color:rgba(245,158,11,.3);color:var(--amber);}
+.action-btn.amber:hover{background:rgba(245,158,11,.1);}
+.action-btn.purple{border-color:rgba(108,99,255,.3);color:var(--accent2);}
+.action-btn.purple:hover{background:rgba(108,99,255,.1);}
+.action-btn.pink{border-color:rgba(236,72,153,.3);color:var(--pink);}
+.action-btn.pink:hover{background:rgba(236,72,153,.1);}
+
+/* ═══════════════════════════════════════════════
+   REWRITE TAB
+═══════════════════════════════════════════════ */
+.rewrite-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  padding:20px;
+}
+.rewrite-card{
+  padding:16px;border-radius:12px;
+  border:1px solid var(--border);background:var(--surface2);
+  cursor:pointer;transition:all .2s;
+}
+.rewrite-card:hover{border-color:var(--accent);background:rgba(108,99,255,.1);}
+.rewrite-card.loading{opacity:.6;pointer-events:none;}
+.rw-icon{font-size:1.5rem;margin-bottom:8px;}
+.rw-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:3px;}
+.rw-desc{font-size:.72rem;color:var(--text2);}
+
+/* ═══════════════════════════════════════════════
+   SCORE TAB
+═══════════════════════════════════════════════ */
+.score-panel{padding:20px;flex:1;overflow-y:auto;}
+.score-overall{
+  display:flex;align-items:center;gap:16px;
+  padding:16px;border-radius:12px;margin-bottom:20px;
+  background:var(--surface2);border:1px solid var(--border2);
+}
+.score-ring{
+  width:72px;height:72px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;font-weight:900;
+  border:3px solid var(--accent);
+  color:var(--text);
+  background:rgba(108,99,255,.1);
+}
+.score-ring.A{border-color:var(--green);color:var(--green);background:rgba(16,185,129,.1);}
+.score-ring.B{border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.1);}
+.score-ring.C{border-color:var(--amber);color:var(--amber);background:rgba(245,158,11,.1);}
+.score-ring.D{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.1);}
+.score-overall-info h3{font-size:1.1rem;font-weight:800;}
+.score-overall-info p{font-size:.78rem;color:var(--text2);margin-top:3px;}
+.score-bars{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
+.score-bar-row{display:flex;flex-direction:column;gap:4px;}
+.score-bar-label{
+  display:flex;justify-content:space-between;
+  font-size:.75rem;font-weight:600;color:var(--text2);
+}
+.score-bar-track{height:7px;background:var(--bg2);border-radius:99px;overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:99px;transition:width .8s ease;}
+.score-feedback-box{
+  padding:12px 14px;border-radius:10px;
+  background:rgba(108,99,255,.07);border:1px solid rgba(108,99,255,.2);
+  font-size:.8rem;color:var(--text2);line-height:1.6;
+}
+.score-feedback-box .fb-label{
+  font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--accent2);margin-bottom:6px;
+}
+.score-placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;min-height:300px;color:var(--text3);text-align:center;gap:10px;
+}
+
+/* ═══════════════════════════════════════════════
+   GUIDE TAB
+═══════════════════════════════════════════════ */
+.guide-panel{padding:20px;overflow-y:auto;flex:1;}
+.guide-step{
+  display:flex;gap:12px;margin-bottom:16px;
+  padding:12px;border-radius:10px;
+  background:var(--surface2);border:1px solid var(--border);
+}
+.guide-num{
+  width:28px;height:28px;border-radius:8px;flex-shrink:0;
+  background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;font-weight:800;
+}
+.guide-step h4{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:3px;}
+.guide-step p{font-size:.75rem;color:var(--text2);line-height:1.6;}
+.guide-tip{
+  padding:12px 14px;border-radius:10px;
+  background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.2);
+  font-size:.78rem;color:var(--text2);line-height:1.6;margin-top:4px;
+}
+.guide-tip strong{color:var(--green);}
+
+/* ═══════════════════════════════════════════════
+   SPINNER / LOADING
+═══════════════════════════════════════════════ */
+.spinner{
+  display:inline-block;
+  width:16px;height:16px;
+  border:2px solid rgba(255,255,255,.2);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text2);font-size:.85rem;}
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+#toast-container{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  display:flex;flex-direction:column;gap:8px;
+}
+.toast{
+  padding:10px 16px;border-radius:10px;font-size:.82rem;font-weight:600;
+  max-width:320px;word-break:break-word;
+  background:var(--surface2);border:1px solid var(--border2);
+  box-shadow:var(--shadow);color:var(--text);
+  animation:toastIn .3s ease;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.toast.success{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.1);color:var(--green);}
+.toast.error{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:var(--red);}
+.toast.info{border-color:rgba(6,182,212,.3);background:rgba(6,182,212,.08);color:var(--cyan);}
+
+/* ═══════════════════════════════════════════════
+   CHAR COUNT
+═══════════════════════════════════════════════ */
+.char-count{
+  font-size:.65rem;color:var(--text3);text-align:right;margin-top:3px;
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════ */
+@media(max-width:640px){
+  .form-row{grid-template-columns:1fr;}
+  .tone-grid{grid-template-columns:repeat(4,1fr);}
+  .rewrite-grid{grid-template-columns:1fr;}
+  .hero-title{letter-spacing:-1px;}
+  .card-body{padding:14px;}
+  .output-card{position:static;}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ══ NAV ══════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-logo">
+    ✉️ Smart<span>Draft</span> AI
+  </div>
+  <div class="nav-right">
+    <div class="status-dot" title="API connected"></div>
+    <span class="nav-badge">v2.0</span>
+  </div>
+</nav>
+
+<!-- ══ HERO ══════════════════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-tag">AI-Powered Writing Platform</div>
+  <h1 class="hero-title">Write Smarter.<br/><span>Sound Professional.</span></h1>
+  <p class="hero-sub">Generate perfectly formatted emails &amp; letters in English or Hindi — with the right tone, structure, and grammar. Every time.</p>
+  <div class="hero-pills">
+    <span class="pill">📧 Email</span>
+    <span class="pill">📜 Letter</span>
+    <span class="pill">🌐 Hindi &amp; English</span>
+    <span class="pill">🔁 AI Rewrite</span>
+    <span class="pill">📊 Quality Score</span>
+    <span class="pill">✨ Auto Subject</span>
+    <span class="pill">📄 PDF Export</span>
+  </div>
+</div>
+
+<!-- ══ MAIN ══════════════════════════════════════════════════ -->
+<div class="page">
+<div class="main-grid">
+
+  <!-- ╔══════════════════════ LEFT: FORM ═══════════════════╗ -->
+  <div class="card" id="formCard">
+    <div class="card-header">
+      <span class="card-title">✍️ Compose</span>
+      <span id="docTypeLabel" style="font-size:.75rem;color:var(--accent2);font-weight:600;">📧 Email Mode</span>
+    </div>
+    <div class="card-body">
+
+      <!-- Doc Type -->
+      <div class="doc-toggle">
+        <button class="doc-btn active" id="emailToggle" onclick="setDocType('email')">
+          📧 Email
+        </button>
+        <button class="doc-btn" id="letterToggle" onclick="setDocType('letter')">
+          📜 Formal Letter
+        </button>
+      </div>
+
+      <!-- To / From -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">To (Recipient)</label>
+          <input class="form-input" id="to" placeholder="e.g. Priya Sharma / HR Manager"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">From (Sender)</label>
+          <input class="form-input" id="from" placeholder="e.g. Rahul Kumar"/>
+        </div>
+      </div>
+
+      <!-- Subject with Auto-gen -->
+      <div class="form-group">
+        <label class="form-label">
+          Subject
+          <span class="hint">Auto-generate below ↓</span>
+        </label>
+        <div class="subject-row">
+          <input class="form-input" id="subject" placeholder="Enter subject or auto-generate ✨"/>
+          <button class="auto-subject-btn" id="autoSubjectBtn" onclick="generateSubjects()">✨ Auto</button>
+        </div>
+        <div class="subject-suggestions" id="subjectSuggestions"></div>
+      </div>
+
+      <!-- Purpose + Language -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Purpose</label>
+          <select class="form-select" id="purpose">
+            <option value="Job Application">Job Application</option>
+            <option value="Leave Request">Leave Request</option>
+            <option value="Complaint Letter">Complaint Letter</option>
+            <option value="Apology Letter">Apology Letter</option>
+            <option value="Business Communication" selected>Business Communication</option>
+            <option value="Follow-up">Follow-up</option>
+            <option value="Thank You">Thank You</option>
+            <option value="Meeting Request">Meeting Request</option>
+            <option value="Project Update">Project Update</option>
+            <option value="Sales Pitch">Sales Pitch</option>
+            <option value="Resignation Letter">Resignation Letter</option>
+            <option value="Recommendation Request">Recommendation Request</option>
+            <option value="Invoice / Payment">Invoice / Payment</option>
+            <option value="Internship Request">Internship Request</option>
+            <option value="NOC Request">NOC Request</option>
+            <option value="Salary Slip Request">Salary Slip Request</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Signature Name</label>
+          <input class="form-input" id="signatureName" placeholder="Name on signature"/>
+        </div>
+      </div>
+
+      <!-- Tone -->
+      <div class="form-group">
+        <label class="form-label">Tone</label>
+        <div class="tone-grid" id="toneGrid">
+          <button class="tone-btn" data-tone="formal" onclick="setTone('formal')">
+            <span class="tone-icon">🎩</span>Formal
+          </button>
+          <button class="tone-btn active" data-tone="professional" onclick="setTone('professional')">
+            <span class="tone-icon">💼</span>Professional
+          </button>
+          <button class="tone-btn" data-tone="friendly" onclick="setTone('friendly')">
+            <span class="tone-icon">🤝</span>Friendly
+          </button>
+          <button class="tone-btn" data-tone="informal" onclick="setTone('informal')">
+            <span class="tone-icon">😊</span>Informal
+          </button>
+          <button class="tone-btn" data-tone="strict" onclick="setTone('strict')">
+            <span class="tone-icon">⚡</span>Strict
+          </button>
+          <button class="tone-btn" data-tone="apologetic" onclick="setTone('apologetic')">
+            <span class="tone-icon">🙏</span>Apologetic
+          </button>
+          <button class="tone-btn" data-tone="urgent" onclick="setTone('urgent')">
+            <span class="tone-icon">🚨</span>Urgent
+          </button>
+          <button class="tone-btn" data-tone="polite" onclick="setTone('polite')">
+            <span class="tone-icon">🌸</span>Polite
+          </button>
+        </div>
+      </div>
+
+      <!-- Language -->
+      <div class="form-group">
+        <label class="form-label">Language</label>
+        <div class="lang-toggle">
+          <button class="lang-btn active" id="langEn" onclick="setLang('English')">🇬🇧 English</button>
+          <button class="lang-btn" id="langHi" onclick="setLang('Hindi')">🇮🇳 Hindi (हिंदी)</button>
+        </div>
+      </div>
+
+      <!-- Context -->
+      <div class="form-group">
+        <label class="form-label">
+          Additional Context
+          <span class="hint">Optional — adds detail</span>
+        </label>
+        <textarea class="form-textarea" id="context" placeholder="Add specific details, dates, names, project info, requirements…" oninput="updateCharCount(this,'ctxCount')"></textarea>
+        <div class="char-count" id="ctxCount">0 / 800 chars</div>
+      </div>
+
+      <!-- Letter-only fields -->
+      <div class="letter-fields" id="letterFields">
+        <div class="letter-fields-title">📜 Letter Address Details</div>
+        <div class="form-group">
+          <label class="form-label">Your Address</label>
+          <textarea class="form-textarea" id="senderAddress" placeholder="123, MG Road, Delhi - 110001" style="min-height:60px;"></textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Recipient Address</label>
+          <textarea class="form-textarea" id="recipientAddress" placeholder="The Manager, ABC Company, Mumbai - 400001" style="min-height:60px;"></textarea>
+        </div>
+      </div>
+
+      <!-- Generate -->
+      <button class="generate-btn" id="generateBtn" onclick="generate()">
+        <span id="generateBtnText">✨ Generate</span>
+      </button>
+
+    </div>
+  </div>
+  <!-- ╚══════════════════════ LEFT END ════════════════════════╝ -->
+
+  <!-- ╔══════════════════════ RIGHT: OUTPUT ═══════════════════╗ -->
+  <div class="card output-card">
+    <div class="card-header">
+      <span class="card-title">📄 Output</span>
+      <div id="outputStats" style="display:none;font-size:.72rem;color:var(--text3);" id="wc"></div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-output" onclick="switchTab('output')">📧 Document</button>
+      <button class="tab-btn" id="tab-score" onclick="switchTab('score')" disabled>📊 Score</button>
+      <button class="tab-btn" id="tab-rewrite" onclick="switchTab('rewrite')" disabled>🔁 Rewrite</button>
+      <button class="tab-btn" id="tab-guide" onclick="switchTab('guide')">💡 Guide</button>
+    </div>
+
+    <!-- ── OUTPUT TAB ── -->
+    <div class="tab-panel active" id="panel-output">
+      <div id="outputMeta" class="output-meta" style="display:none;"></div>
+      <div class="output-body" id="outputBody">
+        <div class="output-placeholder">
+          <div class="ph-icon">✉️</div>
+          <p>Fill in the form and click <strong style="color:var(--accent2)">Generate</strong> to create your document.</p>
+        </div>
+      </div>
+      <div class="action-bar" id="actionBar" style="display:none;">
+        <button class="action-btn green" onclick="copyOutput()">📋 Copy</button>
+        <button class="action-btn amber" onclick="exportPDF()">📄 PDF</button>
+        <button class="action-btn purple" onclick="scoreIt()">📊 Score It</button>
+        <button class="action-btn pink" onclick="switchTab('rewrite')">🔁 Rewrite</button>
+      </div>
+    </div>
+
+    <!-- ── SCORE TAB ── -->
+    <div class="tab-panel" id="panel-score">
+      <div class="score-panel" id="scorePanel">
+        <div class="score-placeholder">
+          <div style="font-size:2.5rem;opacity:.2;">📊</div>
+          <p style="font-size:.82rem;color:var(--text3);">Generate a document first, then click "Score It"</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REWRITE TAB ── -->
+    <div class="tab-panel" id="panel-rewrite">
+      <div style="padding:16px 20px 8px;border-bottom:1px solid var(--border);">
+        <p style="font-size:.82rem;color:var(--text2);">Choose how to transform your document:</p>
+      </div>
+      <div class="rewrite-grid">
+        <div class="rewrite-card" onclick="rewrite('improve')">
+          <div class="rw-icon">✨</div>
+          <div class="rw-title">Improve</div>
+          <div class="rw-desc">Enhance clarity, flow &amp; impact</div>
+        </div>
+        <div class="rewrite-card" onclick="rewrite('shorten')">
+          <div class="rw-icon">✂️</div>
+          <div class="rw-title">Shorten</div>
+          <div class="rw-desc">Remove filler, keep every key point</div>
+        </div>
+        <div class="rewrite-card" onclick="rewrite('expand')">
+          <div class="rw-icon">📝</div>
+          <div class="rw-title">Expand</div>
+          <div class="rw-desc">Add detail, context &amp; supporting ideas</div>
+        </div>
+        <div class="rewrite-card" onclick="rewrite('formal')">
+          <div class="rw-icon">🎩</div>
+          <div class="rw-title">Formalize</div>
+          <div class="rw-desc">Executive-level formal tone</div>
+        </div>
+        <div class="rewrite-card" onclick="rewrite('casual')">
+          <div class="rw-icon">😊</div>
+          <div class="rw-title">Casualize</div>
+          <div class="rw-desc">Friendly, natural conversational style</div>
+        </div>
+      </div>
+      <div style="padding:8px 20px 16px;">
+        <p style="font-size:.75rem;color:var(--text3);">⚡ Rewriting replaces the current output. Generate first if output is empty.</p>
+      </div>
+    </div>
+
+    <!-- ── GUIDE TAB ── -->
+    <div class="tab-panel" id="panel-guide">
+      <div class="guide-panel">
+        <div class="guide-step">
+          <div class="guide-num">1</div>
+          <div>
+            <h4>Choose Document Type</h4>
+            <p>Select <strong>Email</strong> for inbox-ready format or <strong>Formal Letter</strong> for official letter layout with address headers and date.</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">2</div>
+          <div>
+            <h4>Fill Sender &amp; Recipient</h4>
+            <p>Enter full names. The AI uses name endings to auto-detect gender and choose the right salutation (Sir / Ma'am / महोदय / महोदया).</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">3</div>
+          <div>
+            <h4>Auto-Generate Subject</h4>
+            <p>Click the <strong style="color:var(--accent2)">✨ Auto</strong> button to get 5 AI-suggested subjects based on your purpose and context. Click any to use it.</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">4</div>
+          <div>
+            <h4>Pick Tone &amp; Language</h4>
+            <p>8 tone options from Formal to Urgent. Switch language to <strong>Hindi</strong> for full Devanagari output with correct Hindi salutations and closing.</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">5</div>
+          <div>
+            <h4>Add Context (Recommended)</h4>
+            <p>Specific details (dates, names, project names, reasons) make the output much more personalised and realistic.</p>
+          </div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">6</div>
+          <div>
+            <h4>Score &amp; Refine</h4>
+            <p>Use <strong style="color:var(--accent2)">Score It</strong> for AI quality analysis. Use <strong style="color:var(--pink)">Rewrite</strong> to improve, shorten, expand, or change tone.</p>
+          </div>
+        </div>
+        <div class="guide-tip">
+          <strong>💡 Pro Tip:</strong> For best Hindi output, also fill in the context in Hindi or use Hindi keywords — the AI will pick it up and write more naturally.
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- ╚══════════════════════ RIGHT END ═══════════════════════╝ -->
+
+</div><!-- /main-grid -->
+</div><!-- /page -->
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     JAVASCRIPT
+════════════════════════════════════════════════════════════ -->
+<script>
+const API = 'http://127.0.0.1:8000';
+
+// ── State ───────────────────────────────────────────────────
+let state = {
+  docType:  'email',
+  tone:     'professional',
+  language: 'English',
+  output:   '',
+  wordCount: 0,
+};
+
+// ── Toast ───────────────────────────────────────────────────
+function toast(msg, type='info', dur=3500) {
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateY(6px)'; el.style.transition='.3s'; setTimeout(()=>el.remove(),350); }, dur);
+}
+
+// ── Doc Type ────────────────────────────────────────────────
+function setDocType(type) {
+  state.docType = type;
+  document.getElementById('emailToggle').classList.toggle('active', type==='email');
+  document.getElementById('letterToggle').classList.toggle('active', type==='letter');
+  document.getElementById('letterFields').classList.toggle('show', type==='letter');
+  document.getElementById('docTypeLabel').textContent = type==='email' ? '📧 Email Mode' : '📜 Letter Mode';
+}
+
+// ── Tone ────────────────────────────────────────────────────
+function setTone(tone) {
+  state.tone = tone;
+  document.querySelectorAll('.tone-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tone === tone);
+  });
+}
+
+// ── Language ────────────────────────────────────────────────
+function setLang(lang) {
+  state.language = lang;
+  document.getElementById('langEn').classList.toggle('active', lang==='English');
+  document.getElementById('langHi').classList.toggle('active', lang==='Hindi');
+}
+
+// ── Char Count ──────────────────────────────────────────────
+function updateCharCount(el, id) {
+  const max = 800;
+  const len = el.value.length;
+  const c = document.getElementById(id);
+  if(c) c.textContent = `${len} / ${max} chars`;
+  if(len > max) el.value = el.value.slice(0, max);
+}
+
+// ── Tab Switch ──────────────────────────────────────────────
+function switchTab(name) {
+  ['output','score','rewrite','guide'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t===name);
+    document.getElementById(`panel-${t}`).classList.toggle('active', t===name);
+  });
+}
+
+// ── Auto Subject ────────────────────────────────────────────
+async function generateSubjects() {
+  const btn = document.getElementById('autoSubjectBtn');
+  const purpose  = document.getElementById('purpose').value;
+  const context  = document.getElementById('context').value;
+  const suggestions = document.getElementById('subjectSuggestions');
+
+  if (!purpose) { toast('Please select a purpose first','error'); return; }
+
+  btn.classList.add('loading');
+  btn.textContent = '⏳';
+  suggestions.classList.remove('show');
+
+  try {
+    const res = await fetch(`${API}/auto-subject`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ purpose, context, tone: state.tone, language: state.language }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.detail || 'Failed');
+
+    suggestions.innerHTML = '';
+    (data.subjects || []).forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'suggestion-item';
+      item.textContent = s;
+      item.onclick = () => {
+        document.getElementById('subject').value = s;
+        suggestions.classList.remove('show');
+        toast('Subject applied ✅','success',2000);
+      };
+      suggestions.appendChild(item);
+    });
+    suggestions.classList.add('show');
+    toast(`${data.subjects.length} subjects generated!`,'success',2500);
+  } catch(e) {
+    toast('Subject generation failed: ' + e.message,'error');
+  } finally {
+    btn.classList.remove('loading');
+    btn.textContent = '✨ Auto';
+  }
+}
+
+// Close suggestions on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.subject-row') && !e.target.closest('.subject-suggestions')) {
+    document.getElementById('subjectSuggestions').classList.remove('show');
+  }
+});
+
+// ── Set loading state on generate btn ───────────────────────
+function setBtnLoading(loading, label='✨ Generate') {
+  const btn = document.getElementById('generateBtn');
+  const txt = document.getElementById('generateBtnText');
+  btn.disabled = loading;
+  txt.innerHTML = loading
+    ? `<span class="spinner"></span> &nbsp;Generating…`
+    : label;
+}
+
+// ── Render output ───────────────────────────────────────────
+function renderOutput(content, meta) {
+  state.output = content;
+  state.wordCount = meta.word_count || content.split(/\s+/).length;
+
+  // Meta chips
+  const metaEl = document.getElementById('outputMeta');
+  metaEl.style.display = 'flex';
+  metaEl.innerHTML = `
+    <span class="meta-chip type">${meta.doc_type==='letter'?'📜':'📧'} ${meta.doc_type==='letter'?'Letter':'Email'}</span>
+    <span class="meta-chip lang">${meta.language==='Hindi'?'🇮🇳 Hindi':'🇬🇧 English'}</span>
+    <span class="meta-chip wc">📝 ${state.wordCount} words</span>
+    <span class="meta-chip">${meta.tone||state.tone}</span>
+  `;
+
+  // Body
+  document.getElementById('outputBody').textContent = content;
+
+  // Enable tabs & actions
+  document.getElementById('tab-score').disabled  = false;
+  document.getElementById('tab-rewrite').disabled = false;
+  document.getElementById('actionBar').style.display = 'flex';
+
+  // Switch to output tab
+  switchTab('output');
+}
+
+// ── GENERATE ────────────────────────────────────────────────
+async function generate() {
+  const to      = document.getElementById('to').value.trim();
+  const from    = document.getElementById('from').value.trim();
+  const subject = document.getElementById('subject').value.trim();
+  const purpose = document.getElementById('purpose').value;
+  const context = document.getElementById('context').value.trim();
+  const sigName = document.getElementById('signatureName').value.trim();
+  const sAddr   = document.getElementById('senderAddress').value.trim();
+  const rAddr   = document.getElementById('recipientAddress').value.trim();
+
+  if (!to)      { toast('⚠️ Recipient is required','error'); return; }
+  if (!from)    { toast('⚠️ Sender name is required','error'); return; }
+  if (!subject) { toast('⚠️ Subject is required — or click ✨ Auto','error'); return; }
+
+  setBtnLoading(true);
+
+  const payload = {
+    doc_type:          state.docType,
+    to,
+    from:              from,
+    subject,
+    tone:              state.tone,
+    purpose,
+    context,
+    language:          state.language,
+    signature_name:    sigName,
+    sender_address:    sAddr,
+    recipient_address: rAddr,
+  };
+
+  try {
+    const res  = await fetch(`${API}/generate`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.detail || 'Server error');
+    if (!data.success) throw new Error('Generation failed');
+
+    renderOutput(data.content, {
+      doc_type: data.doc_type,
+      language: data.language,
+      tone:     state.tone,
+      word_count: data.word_count,
+    });
+    toast('Document generated successfully! ✅','success');
+
+  } catch(e) {
+    toast('❌ ' + (e.message || 'Generation failed'), 'error');
+    document.getElementById('outputBody').innerHTML = `<div class="output-placeholder"><div class="ph-icon">⚠️</div><p style="color:var(--red)">${e.message}</p></div>`;
+  } finally {
+    setBtnLoading(false);
+  }
+}
+
+// ── SCORE ────────────────────────────────────────────────────
+async function scoreIt() {
+  if (!state.output) { toast('Generate a document first','error'); return; }
+  switchTab('score');
+  const panel = document.getElementById('scorePanel');
+  panel.innerHTML = `<div class="score-placeholder"><div class="loading-row"><span class="spinner"></span> Analysing document…</div></div>`;
+
+  try {
+    const res  = await fetch(`${API}/score`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ text: state.output }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error('Scoring failed');
+    renderScore(data.score);
+    toast('Score ready 📊','success',2500);
+  } catch(e) {
+    panel.innerHTML = `<div class="score-placeholder" style="color:var(--red)">❌ ${e.message}</div>`;
+    toast('❌ Scoring failed','error');
+  }
+}
+
+function scoreColor(n) {
+  if(n>=9) return '#10b981';
+  if(n>=7) return '#06b6d4';
+  if(n>=5) return '#f59e0b';
+  return '#ef4444';
+}
+
+function renderScore(s) {
+  const grade = s.grade || 'B';
+  const panel = document.getElementById('scorePanel');
+  const bars = [
+    {label:'Clarity',        val:s.clarity},
+    {label:'Tone',           val:s.tone},
+    {label:'Grammar',        val:s.grammar},
+    {label:'Professionalism',val:s.professionalism},
+    {label:'Structure',      val:s.structure},
+  ];
+  panel.innerHTML = `
+    <div class="score-overall">
+      <div class="score-ring ${grade}">${grade}</div>
+      <div class="score-overall-info">
+        <h3>Overall: ${s.overall}/10</h3>
+        <p>Quality analysis complete</p>
+      </div>
+    </div>
+    <div class="score-bars">
+      ${bars.map(b=>`
+        <div class="score-bar-row">
+          <div class="score-bar-label">
+            <span>${b.label}</span>
+            <span style="color:${scoreColor(b.val)};font-weight:700;">${b.val}/10</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:${b.val*10}%;background:${scoreColor(b.val)};"></div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div class="score-feedback-box">
+      <div class="fb-label">✅ Strength</div>
+      <div style="margin-bottom:10px;">${s.strengths || '—'}</div>
+      <div class="fb-label">💡 Improvement</div>
+      <div>${s.improvements || '—'}</div>
+    </div>
+  `;
+}
+
+// ── REWRITE ─────────────────────────────────────────────────
+async function rewrite(mode) {
+  if (!state.output) { toast('Generate a document first','error'); return; }
+  const cards = document.querySelectorAll('.rewrite-card');
+  cards.forEach(c=>c.classList.add('loading'));
+
+  try {
+    const res  = await fetch(`${API}/rewrite`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ text: state.output, mode, language: state.language }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error('Rewrite failed');
+
+    state.output = data.content;
+    document.getElementById('outputBody').textContent = data.content;
+
+    // Reset score
+    document.getElementById('scorePanel').innerHTML = `<div class="score-placeholder"><div style="font-size:2.5rem;opacity:.2;">📊</div><p style="font-size:.82rem;color:var(--text3);">Score updated after rewrite — click Score It again</p></div>`;
+
+    switchTab('output');
+    toast(`✅ Rewritten: ${mode}`,'success');
+  } catch(e) {
+    toast('❌ Rewrite failed: ' + e.message,'error');
+  } finally {
+    cards.forEach(c=>c.classList.remove('loading'));
+  }
+}
+
+// ── COPY ────────────────────────────────────────────────────
+function copyOutput() {
+  if (!state.output) { toast('Nothing to copy','error'); return; }
+  navigator.clipboard.writeText(state.output)
+    .then(()=>toast('Copied to clipboard! 📋','success',2000))
+    .catch(()=>toast('Copy failed','error'));
+}
+
+// ── PDF EXPORT ──────────────────────────────────────────────
+function exportPDF() {
+  if (!state.output) { toast('Generate a document first','error'); return; }
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+
+    const to      = document.getElementById('to').value || '';
+    const from    = document.getElementById('from').value || '';
+    const subject = document.getElementById('subject').value || '';
+    const today   = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+
+    const isHindi = state.language === 'Hindi';
+    const titleFont = 'Times';
+
+    // Header
+    pdf.setFillColor(79, 70, 229);
+    pdf.rect(0, 0, 210, 22, 'F');
+    pdf.setTextColor(255,255,255);
+    pdf.setFont(titleFont,'Bold');
+    pdf.setFontSize(14);
+    pdf.text('SmartDraft AI — ' + (state.docType==='letter'?'Official Letter':'Email'), 14, 14);
+
+    // Meta block
+    pdf.setTextColor(50,50,80);
+    pdf.setFont(titleFont,'Normal');
+    pdf.setFontSize(10);
+    let y = 32;
+    pdf.text(`From   : ${from}`, 14, y); y+=6;
+    pdf.text(`To       : ${to}`, 14, y); y+=6;
+    pdf.text(`Subject: ${subject}`, 14, y); y+=6;
+    pdf.text(`Date    : ${today}`, 14, y); y+=6;
+
+    // Divider
+    y+=2;
+    pdf.setDrawColor(200,200,220);
+    pdf.line(14, y, 196, y); y+=8;
+
+    // Body — split into lines
+    pdf.setFont(titleFont,'Normal');
+    pdf.setFontSize(11);
+    pdf.setTextColor(20,20,40);
+
+    const maxWidth = 170;
+    const lines = pdf.splitTextToSize(state.output, maxWidth);
+
+    lines.forEach(line => {
+      if (y > 278) { pdf.addPage(); y = 20; }
+      pdf.text(line, 14, y);
+      y += 6.5;
+    });
+
+    // Footer
+    const pageCount = pdf.getNumberOfPages();
+    for(let i=1;i<=pageCount;i++){
+      pdf.setPage(i);
+      pdf.setFontSize(8);pdf.setTextColor(150);
+      pdf.text(`Generated by SmartDraft AI  |  Page ${i} of ${pageCount}  |  ${today}`,14,290);
+    }
+
+    const fname = `SmartDraft_${state.docType}_${subject.replace(/\s+/g,'_').slice(0,30)}.pdf`;
+    pdf.save(fname);
+    toast('PDF downloaded! 📄','success');
+  } catch(e) {
+    // Fallback: print window
+    const w = window.open('','_blank');
+    w.document.write(`<html><head><title>SmartDraft</title>
+      <style>body{font-family:Georgia,serif;max-width:700px;margin:40px auto;line-height:1.8;color:#1a1a2e;white-space:pre-wrap;font-size:14px;}</style></head>
+      <body>${state.output.replace(/</g,'&lt;')}</body></html>`);
+    w.document.close();
+    setTimeout(()=>w.print(),400);
+    toast('Opening print dialog…','info');
+  }
+}
+
+// ── Keyboard shortcut: Ctrl+Enter to generate ───────────────
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey||e.metaKey) && e.key==='Enter') generate();
+});
+</script>
+</body>
+</html>
